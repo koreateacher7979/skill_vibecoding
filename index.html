@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 에이전트(스킬) & 바이브코딩 실습 교재</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Jua"', '"Gowun Dodum"', 'sans-serif'],
+            sans: ['"Gowun Dodum"', '"Noto Sans KR"', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+          },
+          colors: {
+            cream: '#FFFDF8',
+            night: '#141724',
+            nightCard: '#1D2235'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Google Fonts: 귀엽고 친절한 한국어 폰트 (Jua & Gowun Dodum) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- QRCode.js CDN (로컬 브라우저에서 즉시 선명한 QR 생성) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* 커스텀 스크롤바 및 부드러운 전환 효과 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.7);
+    }
+    .qr-box img, .qr-box canvas {
+      margin: 0 auto;
+      border-radius: 0.75rem;
+    }
+    .fade-in {
+      animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="bg-cream text-slate-800 dark:bg-night dark:text-slate-100 font-sans transition-colors duration-300 h-screen flex flex-col overflow-hidden">
+
+  <!-- ==================== 상단 헤더 ==================== -->
+  <header class="shrink-0 z-30 bg-white/90 dark:bg-nightCard/95 backdrop-blur-md border-b border-amber-100 dark:border-slate-700/70 shadow-sm">
+    <div class="px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- 좌측: 모바일 메뉴 버튼 + 실시간 연수단체 & 연수명 -->
+      <div class="flex items-center gap-3 min-w-0">
+        <button id="mobileMenuBtn" onclick="toggleSidebar()" aria-label="메뉴 열기"
+          class="lg:hidden p-2 rounded-2xl bg-amber-50 hover:bg-amber-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-300 transition">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 flex items-center justify-center text-white text-xl shadow-md shrink-0">
+          🧸
+        </div>
+
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="orgBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+              연수단체 불러오는 중...
+            </span>
+            <span id="syncDot" class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 실시간 시트 연동
+            </span>
+          </div>
+          <h1 id="courseTitle" class="font-display text-lg sm:text-xl text-slate-800 dark:text-white truncate mt-0.5">
+            구글 무료 도구로 끝내는 AI 스킬 & 바이브코딩 실습
+          </h1>
+        </div>
+      </div>
+
+      <!-- 우측: 개발자 표기 + 새로고침 + 테마 전환 + 관리자 모드 -->
+      <div class="flex items-center gap-2 sm:gap-3 ml-auto">
+        <div class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-800/60 text-xs font-bold text-indigo-700 dark:text-indigo-200">
+          <span>✨</span>
+          <span>개발자: 가치있는 미래교육 연구소 대표 김병찬</span>
+        </div>
+
+        <button onclick="refreshAllSheets()" title="구글 시트 실시간 새로고침"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition">
+          <svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="hidden sm:inline">새로고침</span>
+        </button>
+
+        <button onclick="toggleTheme()" id="themeBtn" title="라이트/다크 모드 전환"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-amber-300 text-xs font-bold transition">
+          <span id="themeIcon">🌙</span>
+          <span id="themeLabel" class="hidden sm:inline">다크모드</span>
+        </button>
+
+        <button onclick="openAdminModal()" title="관리자 모드 (구글 시트 연결)"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-bold border border-rose-200/70 dark:border-rose-800/60 transition">
+          <span>🔐</span>
+          <span class="hidden sm:inline">관리자</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 모바일/태블릿용 개발자 표기 서브바 -->
+    <div class="xl:hidden px-4 py-1 bg-indigo-50/80 dark:bg-indigo-950/40 border-t border-indigo-100/70 dark:border-indigo-900/50 text-center text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+      ✨ 개발자: 가치있는 미래교육 연구소 대표 김병찬
+    </div>
+  </header>
+
+  <!-- ==================== 메인 바디 (좌측 카테고리 + 우측 풀스크린 콘텐츠) ==================== -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- 모바일 사이드바 오버레이 -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+
+    <!-- 좌측 카테고리 네비게이션 -->
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-40 w-72 shrink-0 bg-white dark:bg-nightCard border-r border-amber-100 dark:border-slate-700/70 flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-xl lg:shadow-none">
+      <div class="p-4 overflow-y-auto flex-1 space-y-5">
+
+        <!-- 시작하기 -->
+        <div>
+          <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+            🎈 시작하기
+          </p>
+          <nav class="space-y-1">
+            <button data-cat="intro" onclick="selectCategory('intro')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-sm font-bold transition">
+              <span class="text-lg">🗺️</span>
+              <span>오리엔테이션 & 로드맵</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- 1차시: AI 에이전트(스킬) -->
+        <div>
+          <div class="px-3 mb-2 flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              🌟 1차시 · AI 에이전트(스킬)
+            </span>
+          </div>
+          <nav class="space-y-1">
+            <button data-cat="skill-concept" onclick="selectCategory('skill-concept')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-sm font-bold transition">
+              <span class="text-lg">🧩</span>
+              <span>Gem에서 '스킬(Skill)'로</span>
+            </button>
+            <button data-cat="skill-practice" onclick="selectCategory('skill-practice')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-sm font-bold transition">
+              <span class="text-lg">🤖</span>
+              <span>직군별 맞춤 스킬 제작</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- 2차시: 바이브코딩 & 웹앱 배포 -->
+        <div>
+          <div class="px-3 mb-2 flex items-center justify-between">
+            <span class="text-[11px] font-bold text-sky-600 dark:text-sky-400">
+              🚀 2차시 · 바이브코딩 & 배포
+            </span>
+          </div>
+          <nav class="space-y-1">
+            <button data-cat="vibe-canvas" onclick="selectCategory('vibe-canvas')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-sm font-bold transition">
+              <span class="text-lg">🎨</span>
+              <span>바이브코딩 첫걸음 (Canvas)</span>
+            </button>
+            <button data-cat="webapp-deploy" onclick="selectCategory('webapp-deploy')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-sm font-bold transition">
+              <span class="text-lg">🌐</span>
+              <span>시트 연동 웹앱 무료 배포</span>
+            </button>
+            <button data-cat="custom-security" onclick="selectCategory('custom-security')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center gap-3 text-sm font-bold transition">
+              <span class="text-lg">🛡️</span>
+              <span>직군별 응용 & 보안 가이드</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- 실시간 구글 시트 연동 카테고리 -->
+        <div>
+          <div class="px-3 mb-2 flex items-center justify-between">
+            <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+              📡 실시간 연수 자료실
+            </span>
+          </div>
+          <nav class="space-y-1">
+            <button data-cat="practice-data" onclick="selectCategory('practice-data')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-sm font-bold transition">
+              <span class="flex items-center gap-3">
+                <span class="text-lg">📂</span>
+                <span>실습데이터</span>
+              </span>
+              <span id="practiceCountBadge" class="px-2 py-0.5 text-[11px] rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">0</span>
+            </button>
+            <button data-cat="ref-sites" onclick="selectCategory('ref-sites')"
+              class="nav-item w-full text-left px-3.5 py-2.5 rounded-2xl flex items-center justify-between text-sm font-bold transition">
+              <span class="flex items-center gap-3">
+                <span class="text-lg">🔗</span>
+                <span>참고사이트</span>
+              </span>
+              <span id="refCountBadge" class="px-2 py-0.5 text-[11px] rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300">0</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- 사이드바 하단 안내 -->
+      <div class="p-4 border-t border-amber-100 dark:border-slate-700/70 bg-amber-50/50 dark:bg-slate-800/40">
+        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          💡 <strong>초보자 안심 가이드</strong><br />
+          모든 프롬프트와 코드는 버튼 한 번으로 복사할 수 있어요!
+        </p>
+      </div>
+    </aside>
+
+    <!-- 우측 풀스크린 콘텐츠 영역 -->
+    <main id="mainContent" class="flex-1 h-full overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+      <!-- 선택된 카테고리 내용이 이곳에 화면 가득 렌더링됩니다 -->
+    </main>
+  </div>
+
+  <!-- ==================== 관리자 인증 모달 ==================== -->
+  <div id="adminModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-nightCard w-full max-w-md rounded-3xl shadow-2xl border border-rose-100 dark:border-slate-700 p-6 fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <span class="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-xl">🔐</span>
+          <div>
+            <h3 class="font-display text-lg text-slate-800 dark:text-white">관리자 모드 인증</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">구글 시트 '설정' 탭의 비밀번호로 인증합니다</p>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">✕</button>
+      </div>
+
+      <div id="adminLoginBox" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">관리자 비밀번호</label>
+          <input id="adminPwInput" type="password" placeholder="비밀번호를 입력하세요"
+            onkeydown="if(event.key==='Enter') verifyAdminPassword()"
+            class="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-400 text-sm" />
+          <p id="adminErrorMsg" class="text-xs text-rose-500 font-bold mt-2 hidden">비밀번호가 일치하지 않습니다. 다시 확인해 주세요.</p>
+        </div>
+
+        <div class="flex gap-2 justify-end">
+          <button onclick="closeAdminModal()" class="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-bold">
+            취소
+          </button>
+          <button onclick="verifyAdminPassword()" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-orange-500 hover:opacity-90 text-white text-sm font-bold shadow-md">
+            인증 및 시트 열기
+          </button>
+        </div>
+      </div>
+
+      <div id="adminSuccessBox" class="hidden space-y-4 text-center py-2">
+        <div class="text-4xl">🎉</div>
+        <p class="font-display text-lg text-emerald-600 dark:text-emerald-400">관리자 인증이 완료되었습니다!</p>
+        <p class="text-xs text-slate-500 dark:text-slate-400">새 창이 자동으로 열리지 않으면 아래 버튼을 눌러 구글 시트로 이동하세요.</p>
+        <div class="flex flex-col gap-2 pt-2">
+          <a id="adminSheetLink" href="https://docs.google.com/spreadsheets/d/1CeEL7wNbewk89IRCsF_NF4IzmTqxM8aBAZeDtdYvb7c/edit?gid=367736978#gid=367736978"
+            target="_blank" rel="noopener noreferrer"
+            class="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-md transition">
+            📊 관리용 구글 시트 바로 열기
+          </a>
+          <button onclick="closeAdminModal()" class="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== QR 코드 확대 모달 ==================== -->
+  <div id="qrModal" onclick="if(event.target===this) closeQrModal()" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-nightCard w-full max-w-md rounded-3xl shadow-2xl border border-amber-100 dark:border-slate-700 p-6 text-center fade-in">
+      <div class="flex items-center justify-between mb-3">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">📱 QR 코드 확대보기</span>
+        <button onclick="closeQrModal()" class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 font-bold">✕</button>
+      </div>
+      <h3 id="qrModalTitle" class="font-display text-xl text-slate-800 dark:text-white mb-4">제목</h3>
+      <div class="bg-white p-5 rounded-3xl inline-block shadow-inner border border-slate-100">
+        <div id="qrModalCanvas" class="qr-box"></div>
+      </div>
+      <p id="qrModalUrl" class="text-xs text-slate-500 dark:text-slate-400 break-all mt-4 bg-slate-50 dark:bg-slate-800 p-3 rounded-2xl"></p>
+      <div class="mt-4 flex gap-2 justify-center">
+        <a id="qrModalLinkBtn" href="#" target="_blank" rel="noopener noreferrer"
+          class="px-5 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-sm font-bold shadow-md transition">
+          🚀 바로가기
+        </a>
+        <button onclick="closeQrModal()" class="px-5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-bold">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 토스트 알림 ==================== -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 hidden items-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold shadow-2xl transition-all">
+    <span id="toastIcon">✅</span>
+    <span id="toastText">복사되었습니다!</span>
+  </div>
+
+  <!-- ==================== 스크립트 영역 ==================== -->
+  <script>
+    // =========================================================================
+    // 1. 구글 시트 설정 및 전역 상태 관리
+    // =========================================================================
+    const SHEET_ID = '1CeEL7wNbewk89IRCsF_NF4IzmTqxM8aBAZeDtdYvb7c';
+    const ADMIN_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1CeEL7wNbewk89IRCsF_NF4IzmTqxM8aBAZeDtdYvb7c/edit?gid=367736978#gid=367736978';
+
+    const state = {
+      currentCategory: 'intro',
+      selectedTrack: 'public', // 'public' | 'social' | 'job'
+      codeTab: 'codegs',       // 'codegs' | 'indexhtml'
+      settings: {
+        password: '',
+        organization: '가치있는 미래교육 연구소',
+        courseName: '구글 무료 도구로 끝내는 AI 에이전트(스킬) & 바이브코딩 실습',
+        loaded: false
+      },
+      practiceData: [], // [{ title, content, isLink }]
+      refSites: [],     // [{ title, url }]
+      sheetError: {
+        practice: false,
+        ref: false
+      },
+      searchPractice: '',
+      searchRef: ''
+    };
+
+    // =========================================================================
+    // 2. 구글 시트 실시간 Fetch 유틸리티 (Google Visualization API)
+    // =========================================================================
+    async function fetchSheetRange(sheetName, range) {
+      // headers=0 을 지정하여 range 시작 행(2행)이 헤더로 삼켜지지 않도록 보장
+      const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&headers=0&range=${encodeURIComponent(range)}&_ts=${Date.now()}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const text = await response.text();
+      const startIdx = text.indexOf('{');
+      const endIdx = text.lastIndexOf('}');
+      if (startIdx === -1 || endIdx === -1) {
+        throw new Error('구글 시트 응답 파싱 실패');
+      }
+      const json = JSON.parse(text.substring(startIdx, endIdx + 1));
+      if (json.status === 'error') {
+        throw new Error(json.errors?.[0]?.detailed_message || '시트 조회 오류');
+      }
+      return json.table?.rows || [];
+    }
+
+    function getCellValue(row, colIndex) {
+      if (!row || !row.c || !row.c[colIndex]) return '';
+      const cell = row.c[colIndex];
+      if (cell.v !== null && cell.v !== undefined) return String(cell.v).trim();
+      if (cell.f !== null && cell.f !== undefined) return String(cell.f).trim();
+      return '';
+    }
+
+    function isLikelyUrl(str) {
+      const s = (str || '').trim();
+      return /^(https?:\/\/|www\.)[^\s]+$/i.test(s);
+    }
+
+    function normalizeUrl(str) {
+      const s = (str || '').trim();
+      if (!s) return '#';
+      return /^https?:\/\//i.test(s) ? s : 'https://' + s;
+    }
+
+    async function loadSettingsSheet() {
+      try {
+        const rows = await fetchSheetRange('설정', 'A2:C2');
+        if (rows.length > 0) {
+          const pw = getCellValue(rows[0], 0);
+          const org = getCellValue(rows[0], 1);
+          const title = getCellValue(rows[0], 2);
+          state.settings.password = pw;
+          if (org) state.settings.organization = org;
+          if (title) state.settings.courseName = title;
+          state.settings.loaded = true;
+        }
+      } catch (err) {
+        console.warn('설정 시트 로드 오류:', err);
+      } finally {
+        document.getElementById('orgBadge').textContent = state.settings.organization;
+        document.getElementById('courseTitle').textContent = state.settings.courseName;
+        document.title = `${state.settings.courseName} | ${state.settings.organization}`;
+      }
+    }
+
+    async function loadPracticeDataSheet() {
+      state.sheetError.practice = false;
+      try {
+        const rows = await fetchSheetRange('실습데이터', 'A2:B');
+        state.practiceData = rows
+          .map(r => {
+            const title = getCellValue(r, 0);
+            const content = getCellValue(r, 1);
+            return { title, content, isLink: isLikelyUrl(content) };
+          })
+          .filter(item => item.title || item.content);
+      } catch (err) {
+        console.warn('실습데이터 시트 로드 오류:', err);
+        state.sheetError.practice = true;
+      } finally {
+        document.getElementById('practiceCountBadge').textContent = state.practiceData.length;
+      }
+    }
+
+    async function loadRefSitesSheet() {
+      state.sheetError.ref = false;
+      try {
+        const rows = await fetchSheetRange('참고사이트', 'A2:B');
+        state.refSites = rows
+          .map(r => {
+            const title = getCellValue(r, 0);
+            const url = getCellValue(r, 1);
+            return { title, url };
+          })
+          .filter(item => item.title || item.url);
+      } catch (err) {
+        console.warn('참고사이트 시트 로드 오류:', err);
+        state.sheetError.ref = true;
+      } finally {
+        document.getElementById('refCountBadge').textContent = state.refSites.length;
+      }
+    }
+
+    async function refreshAllSheets(showFeedback = true) {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('animate-spin');
+
+      await Promise.all([
+        loadSettingsSheet(),
+        loadPracticeDataSheet(),
+        loadRefSitesSheet()
+      ]);
+
+      if (icon) icon.classList.remove('animate-spin');
+
+      if (state.currentCategory === 'practice-data' || state.currentCategory === 'ref-sites' || state.currentCategory === 'intro') {
+        renderCurrentCategory();
+      }
+      if (showFeedback) {
+        showToast('구글 시트 최신 데이터를 반영했어요!', '📡');
+      }
+    }
+
+    // =========================================================================
+    // 3. 클립보드 복사 (iFrame 호환 document.execCommand 사용) & 토스트
+    // =========================================================================
+    function copyText(text, label = '클립보드에 복사되었습니다!') {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        ta.style.top = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast(label, '📋');
+      } catch (e) {
+        showToast('복사에 실패했어요. 직접 드래그해 복사해 주세요.', '⚠️');
+      }
+    }
+
+    function copyById(elementId, label = '내용이 복사되었습니다!') {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      copyText(el.innerText || el.textContent, label);
+    }
+
+    let toastTimer = null;
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastIcon').textContent = icon;
+      document.getElementById('toastText').textContent = msg;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 2600);
+    }
+
+    // =========================================================================
+    // 4. 테마(다크/라이트), 모바일 사이드바, 모달 컨트롤
+    // =========================================================================
+    function initTheme() {
+      const saved = localStorage.getItem('edu_dashboard_theme');
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+      updateThemeBtn();
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('edu_dashboard_theme', isDark ? 'dark' : 'light');
+      updateThemeBtn();
+    }
+
+    function updateThemeBtn() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
+      document.getElementById('themeLabel').textContent = isDark ? '라이트모드' : '다크모드';
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('sidebarOverlay');
+      const isOpen = !sb.classList.contains('-translate-x-full');
+      if (isOpen) {
+        sb.classList.add('-translate-x-full');
+        ov.classList.add('hidden');
+      } else {
+        sb.classList.remove('-translate-x-full');
+        ov.classList.remove('hidden');
+      }
+    }
+
+    function openAdminModal() {
+      const modal = document.getElementById('adminModal');
+      document.getElementById('adminPwInput').value = '';
+      document.getElementById('adminErrorMsg').classList.add('hidden');
+      document.getElementById('adminLoginBox').classList.remove('hidden');
+      document.getElementById('adminSuccessBox').classList.add('hidden');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      // 열 때마다 최신 비밀번호 동기화
+      loadSettingsSheet();
+      setTimeout(() => document.getElementById('adminPwInput').focus(), 100);
+    }
+
+    function closeAdminModal() {
+      const modal = document.getElementById('adminModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function verifyAdminPassword() {
+      const inputVal = document.getElementById('adminPwInput').value.trim();
+      const errEl = document.getElementById('adminErrorMsg');
+
+      // 최신 A2 비밀번호 다시 확인
+      await loadSettingsSheet();
+
+      if (!state.settings.password) {
+        errEl.textContent = "구글 시트 '설정' 탭의 A2 셀에서 비밀번호를 불러오지 못했습니다. 시트 공유 설정을 확인해 주세요.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (inputVal === state.settings.password) {
+        errEl.classList.add('hidden');
+        document.getElementById('adminLoginBox').classList.add('hidden');
+        document.getElementById('adminSuccessBox').classList.remove('hidden');
+        window.open(ADMIN_SHEET_URL, '_blank', 'noopener,noreferrer');
+      } else {
+        errEl.textContent = '비밀번호가 일치하지 않습니다. 다시 확인해 주세요.';
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function openQrModal(title, url) {
+      const normalized = normalizeUrl(url);
+      document.getElementById('qrModalTitle').textContent = title || 'QR 코드';
+      document.getElementById('qrModalUrl').textContent = normalized;
+      document.getElementById('qrModalLinkBtn').href = normalized;
+
+      const container = document.getElementById('qrModalCanvas');
+      container.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(container, {
+          text: normalized,
+          width: 240,
+          height: 240,
+          colorDark: '#1e293b',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+
+      const modal = document.getElementById('qrModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeQrModal() {
+      const modal = document.getElementById('qrModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // =========================================================================
+    // 5. 실습용 템플릿 데이터 (직군별 스킬 + 바이브코딩 코드)
+    // =========================================================================
+    const TRACK_DATA = {
+      public: {
+        badge: '🏛️ 공공기관 관계자',
+        color: 'amber',
+        skillName: '공문서·회의록 검수 및 요약 스킬',
+        skillInstruction: `[역할 및 목표]
+너는 공공기관 행정실무 베테랑 주무관이다. 사용자가 입력한 거친 회의 메모를 분석하여 행정 현장에서 즉시 활용 가능한 초안 3종을 작성한다.
+
+[작업 절차]
+1. 입력된 메모에서 확정된 사실과 수치(인원, 날짜, 금액)를 먼저 추출한다.
+2. 아래 3가지 문서를 순서대로 구조화하여 작성한다.
+   ① 공식 회의록 (회의 개요 / 주요 논의 / 결정 사항)
+   ② 담당자별 후속 조치표 (담당자 / 할 일 / 기한)
+   ③ 보도자료·안내문 초안 (5줄 이내 핵심 요약)
+
+[필수 제약 규칙]
+- 원문에 없는 날짜, 장소, 예산, 참석자는 절대 지어내지 말고 반드시 [확인 필요]로 표기한다.
+- '확정 사항'과 '검토 중 사항'을 명확히 분리한다.
+- 객관적이고 간결한 행정 문체(~함, ~임)를 유지한다.`,
+        sampleInput: `11월 20일 실무회의. 지난 역량강화 교육 참여 42명, 목표 50명이었음. 만족도 조사는 아직 미집계.
+다음 간담회는 12월 10일 예정인데 장소는 대회의실 협의 중.
+예산은 120만원 정도 검토 중. 홍보 포스터는 김 주무관이 11월 28일까지 시안 만들기로 함.
+지역 주민 참여를 늘릴 아이디어 필요함.`,
+        webappIdea: '행사·교육 만족도 조사 및 실시간 집계 웹앱',
+        customPrompt: `방금 만든 웹앱을 '공공기관 행사 만족도 설문 및 실시간 현황판'으로 수정해 줘.
+1. 입력 항목: [참여자 구분(주민/기관/기타), 만족도 점수(1~5점 선택 버튼), 좋았던 점, 건의사항]
+2. 하단 대시보드에 '총 응답 수'와 '평균 만족도 점수'를 큰 카드로 자동 계산해서 보여줘.
+3. 모바일에서 QR코드로 접속했을 때 한 손으로 누르기 편하게 버튼을 크게 만들어 줘.`
+      },
+      social: {
+        badge: '🌱 사회적기업 임직원',
+        color: 'emerald',
+        skillName: '지원사업 심사위원 & 홍보 기획 스킬',
+        skillInstruction: `[역할 및 목표]
+너는 사회적경제 지원사업 심사위원이자 마케팅 디렉터다. 사용자가 입력한 사업 아이디어 또는 사업계획서 초안을 분석해 날카로운 피드백과 홍보 문구를 제공한다.
+
+[작업 절차]
+1. [심사위원 모드] 사업 필요성, 사회적 가치, 실행 가능성, 수익성 관점에서 탈락할 수 있는 약점 5가지를 지적하고 구체적인 보완 방향을 제시한다.
+2. [홍보 기획 모드] 이 사업/제품의 강점을 살려 ① 인스타그램 감성 홍보글 ② 블로그 안내문 제목 3개 ③ 추천 해시태그 8개를 작성한다.
+
+[필수 제약 규칙]
+- 원문 자료로 확인되지 않는 과장된 수치나 인증 내역은 만들지 말고 [근거 보완 필요]로 표시한다.
+- 사회적 가치(취약계층 일자리, 지역 상생 등)가 잘 드러나도록 다듬는다.`,
+        sampleInput: `우리 기업은 지역 어르신들과 함께 친환경 커피박(커피 찌꺼기)으로 화분과 탈취제를 만드는 예비 사회적기업입니다.
+내년 지자체 판로지원 사업에 신청하려고 합니다.
+예산 1,500만원으로 온라인 쇼핑몰 상세페이지를 만들고, 지역 초등학교 5곳에서 환경 체험 키트 수업을 열 계획입니다.`,
+        webappIdea: '간편 재고·수불 관리 / 체험 신청 접수 웹앱',
+        customPrompt: `방금 만든 웹앱을 '사회적기업 원부자재 간편 입출고 관리 앱'으로 수정해 줘.
+1. 입력 항목: [품목명, 구분(입고/출고 선택), 수량(숫자), 담당자 메모]
+2. 하단 표에 품목별 '현재 남은 재고 합계'를 계산해서 보여주고, 재고가 10개 미만이면 빨간색 '부족' 배지를 띄워줘.
+3. 현장에서 스마트폰으로 빠르게 입력할 수 있게 깔끔한 디자인으로 만들어 줘.`
+      },
+      job: {
+        badge: '🎯 취업준비생',
+        color: 'sky',
+        skillName: '직무 맞춤 자소서 첨삭 & 면접관 스킬',
+        skillInstruction: `[역할 및 목표]
+너는 대기업·공공기관 인사팀 10년 차 채용 담당자다. 사용자가 입력한 지원 직무(또는 채용공고)와 경험 메모를 바탕으로 합격 확률을 높이는 자소서 초안과 면접 질문을 생성한다.
+
+[작업 절차]
+1. 입력된 경험을 STAR 기법(상황-과제-행동-결과)으로 재구성해 500자 내외의 자기소개서 초안을 작성한다.
+2. 작성된 내용을 바탕으로 실제 면접관이 물어볼 압박 질문 5개와 핵심 답변 방향을 제시한다.
+
+[필수 제약 규칙]
+- 사용자가 적지 않은 경력, 자격증, 성과 수치는 절대 지어내지 말고 [구체적 수치 입력 필요]로 비워둔다.
+- 추상적인 표현("열심히 했다") 대신 구체적인 행동 동사로 바꾼다.`,
+        sampleInput: `지원 직무: 공공기관 행정·홍보 인턴
+내 경험: 대학교 학과 학생회 홍보부장으로 1년간 일함.
+신입생 환영회 카드뉴스를 직접 만들어 인스타그램에 올렸더니 작년보다 참여 신청이 많이 늘었음.
+중간에 일정이 꼬여서 힘들었지만 팀원들과 밤새 회의해서 잘 마무리함.`,
+        webappIdea: '채용 지원 현황 트래커 / 모바일 포트폴리오 웹앱',
+        customPrompt: `방금 만든 웹앱을 '나만의 채용 지원 현황 관리 트래커'로 수정해 줘.
+1. 입력 항목: [기업명, 지원 직무, 마감일(날짜 선택), 진행 상태(서류준비/서류제출/면접대기/최종합격)]
+2. 목록에서 마감일까지 남은 일수(D-Day)를 자동 계산해서 배지로 표시해 줘.
+3. 상단에 진행 상태별 지원 개수를 한눈에 볼 수 있는 요약 카드를 추가해 줘.`
+      }
+    };
+
+    const SAMPLE_CODE_GS = `// Google Apps Script 백엔드 코드 (Code.gs)
+// 1. 웹앱 접속 시 index.html 화면을 보여줍니다.
+function doGet() {
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('나만의 실시간 시트 연동 웹앱')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+// 2. 웹 화면에서 보낸 데이터를 구글 시트 맨 아래 행에 저장합니다.
+function saveRecord(formData) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+
+  // 첫 행이 비어있다면 헤더를 자동으로 생성합니다.
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['등록일시', '항목/제목', '분류/상태', '수량/점수', '담당자/메모']);
+  }
+
+  const now = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+  sheet.appendRow([
+    now,
+    formData.title,
+    formData.category,
+    formData.amount,
+    formData.memo
+  ]);
+
+  return getRecentRecords();
+}
+
+// 3. 시트에 저장된 최근 데이터 10건을 불러옵니다.
+function getRecentRecords() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+
+  const startRow = Math.max(2, lastRow - 9);
+  const numRows = lastRow - startRow + 1;
+  const values = sheet.getRange(startRow, 1, numRows, 5).getDisplayValues();
+  return values.reverse(); // 최신순 정렬
+}`;
+
+    const SAMPLE_INDEX_HTML = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-amber-50 min-h-screen p-4 sm:p-8 font-sans">
+  <div class="max-w-xl mx-auto space-y-6">
+    <!-- 상단 헤더 카드 -->
+    <div class="bg-white rounded-3xl p-6 shadow-md border border-amber-100 text-center">
+      <div class="text-3xl mb-1">✨</div>
+      <h1 class="text-2xl font-bold text-slate-800">실시간 접수·관리 웹앱</h1>
+      <p class="text-sm text-slate-500 mt-1">입력한 내용이 내 구글 시트에 바로 저장됩니다!</p>
+    </div>
+
+    <!-- 입력 폼 카드 -->
+    <form id="dataForm" class="bg-white rounded-3xl p-6 shadow-md border border-amber-100 space-y-4">
+      <div>
+        <label class="block text-sm font-bold text-slate-700 mb-1">항목 / 제목</label>
+        <input type="text" id="title" required placeholder="예: A4 용지 입고 / 행사 신청"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-amber-400 outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">분류 / 상태</label>
+          <select id="category" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white">
+            <option value="접수완료">접수완료</option>
+            <option value="진행중">진행중</option>
+            <option value="입고">입고</option>
+            <option value="출고">출고</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">수량 / 점수</label>
+          <input type="number" id="amount" value="1"
+            class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-slate-700 mb-1">담당자 / 메모</label>
+        <input type="text" id="memo" placeholder="간단한 비고를 적어주세요"
+          class="w-full px-4 py-2.5 rounded-xl border border-slate-200">
+      </div>
+      <button type="submit" id="submitBtn"
+        class="w-full py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow transition">
+        💾 구글 시트에 저장하기
+      </button>
+    </form>
+
+    <!-- 최근 내역 조회 카드 -->
+    <div class="bg-white rounded-3xl p-6 shadow-md border border-amber-100">
+      <h2 class="text-lg font-bold text-slate-800 mb-3">📋 최근 등록 내역 (최신 10건)</h2>
+      <div id="listArea" class="space-y-2 text-sm text-slate-600">데이터를 불러오는 중...</div>
+    </div>
+  </div>
+
+  <script>
+    function renderList(rows) {
+      const el = document.getElementById('listArea');
+      if (!rows || rows.length === 0) {
+        el.innerHTML = '<p class="text-slate-400 text-center py-4">아직 등록된 내역이 없습니다.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(r => \`
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center gap-2">
+          <div>
+            <div class="font-bold text-slate-800">\${r[1]} <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">\${r[2]}</span></div>
+            <div class="text-xs text-slate-400 mt-0.5">\${r[0]} · \${r[4] || '-'}</div>
+          </div>
+          <div class="font-bold text-amber-600 text-base shrink-0">\${r[3]}</div>
+        </div>
+      \`).join('');
+    }
+
+    // 페이지 열릴 때 기존 데이터 불러오기
+    google.script.run.withSuccessHandler(renderList).getRecentRecords();
+
+    // 저장 버튼 클릭 시 시트로 전송
+    document.getElementById('dataForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '저장 중입니다...';
+
+      const payload = {
+        title: document.getElementById('title').value,
+        category: document.getElementById('category').value,
+        amount: document.getElementById('amount').value,
+        memo: document.getElementById('memo').value
+      };
+
+      google.script.run.withSuccessHandler(function(rows) {
+        renderList(rows);
+        document.getElementById('dataForm').reset();
+        btn.disabled = false;
+        btn.textContent = '✅ 저장 완료! 다시 저장하기';
+      }).saveRecord(payload);
+    });
+  <\/script>
+</body>
+</html>`;
+
+    // =========================================================================
+    // 6. 카테고리 전환 및 화면 렌더링 함수
+    // =========================================================================
+    function selectCategory(catId) {
+      state.currentCategory = catId;
+
+      // 사이드바 활성 스타일 업데이트
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        const isActive = btn.dataset.cat === catId;
+        if (isActive) {
+          btn.classList.add('bg-gradient-to-r', 'from-amber-400', 'to-orange-400', 'text-white', 'shadow-md');
+          btn.classList.remove('text-slate-700', 'dark:text-slate-200', 'hover:bg-amber-50', 'dark:hover:bg-slate-800');
+        } else {
+          btn.classList.remove('bg-gradient-to-r', 'from-amber-400', 'to-orange-400', 'text-white', 'shadow-md');
+          btn.classList.add('text-slate-700', 'dark:text-slate-200', 'hover:bg-amber-50', 'dark:hover:bg-slate-800');
+        }
+      });
+
+      // 모바일에서는 메뉴 클릭 시 사이드바 닫기
+      const sb = document.getElementById('sidebar');
+      if (window.innerWidth < 1024 && !sb.classList.contains('-translate-x-full')) {
+        toggleSidebar();
+      }
+
+      renderCurrentCategory();
+      document.getElementById('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setTrack(track) {
+      state.selectedTrack = track;
+      renderCurrentCategory();
+    }
+
+    function setCodeTab(tab) {
+      state.codeTab = tab;
+      renderCurrentCategory();
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function renderCurrentCategory() {
+      const container = document.getElementById('mainContent');
+      let html = '';
+
+      switch (state.currentCategory) {
+        case 'intro':
+          html = renderIntroView();
+          break;
+        case 'skill-concept':
+          html = renderSkillConceptView();
+          break;
+        case 'skill-practice':
+          html = renderSkillPracticeView();
+          break;
+        case 'vibe-canvas':
+          html = renderVibeCanvasView();
+          break;
+        case 'webapp-deploy':
+          html = renderWebappDeployView();
+          break;
+        case 'custom-security':
+          html = renderCustomSecurityView();
+          break;
+        case 'practice-data':
+          html = renderPracticeDataView();
+          break;
+        case 'ref-sites':
+          html = renderRefSitesView();
+          break;
+      }
+
+      container.innerHTML = `<div class="max-w-6xl mx-auto pb-12 fade-in">${html}</div>`;
+
+      // QR 코드가 필요한 뷰라면 DOM 렌더링 직후 QR 생성
+      if (state.currentCategory === 'practice-data') {
+        renderPracticeQRs();
+      } else if (state.currentCategory === 'ref-sites') {
+        renderRefQRs();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // View 0: 오리엔테이션 & 로드맵
+    // -------------------------------------------------------------------------
+    function renderIntroView() {
+      return `
+        <div class="rounded-3xl bg-gradient-to-br from-amber-400 via-orange-400 to-rose-400 p-6 sm:p-10 text-white shadow-xl mb-6 relative overflow-hidden">
+          <div class="relative z-10">
+            <span class="inline-block px-3.5 py-1 rounded-full bg-white/25 backdrop-blur-sm text-xs font-bold mb-3">
+              🎉 100% 무료 구글 도구 · 코딩 몰라도 OK!
+            </span>
+            <h2 class="font-display text-2xl sm:text-4xl leading-snug mb-3">
+              ${escapeHtml(state.settings.courseName)}
+            </h2>
+            <p class="text-white/95 text-sm sm:text-base max-w-2xl leading-relaxed">
+              단순히 AI에게 질문만 하던 단계를 넘어, <strong>나만의 AI 에이전트(스킬)</strong>를 만들고
+              대화만으로 <strong>실무 웹앱을 제작해 내 URL로 배포</strong>하는 실전 워크숍입니다.
+            </p>
+            <div class="mt-6 flex flex-wrap gap-3">
+              <button onclick="selectCategory('skill-concept')" class="px-5 py-3 rounded-2xl bg-white text-orange-600 font-bold text-sm shadow-md hover:scale-105 transition">
+                🌟 1차시 시작하기
+              </button>
+              <button onclick="selectCategory('vibe-canvas')" class="px-5 py-3 rounded-2xl bg-slate-900/25 hover:bg-slate-900/35 text-white font-bold text-sm backdrop-blur-sm transition">
+                🚀 2차시 바로보기
+              </button>
+              <button onclick="selectCategory('practice-data')" class="px-5 py-3 rounded-2xl bg-emerald-500/90 hover:bg-emerald-600 text-white font-bold text-sm shadow-md transition">
+                📂 실시간 실습데이터 (${state.practiceData.length})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2차시 주제별 로드맵 -->
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-amber-100 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-11 h-11 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-2xl">🌟</span>
+              <div>
+                <span class="text-xs font-bold text-amber-600 dark:text-amber-400">1차시 (약 60분)</span>
+                <h3 class="font-display text-xl text-slate-800 dark:text-white">나만의 AI 에이전트(스킬) 구축</h3>
+              </div>
+            </div>
+            <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+              <li class="flex items-start gap-2.5">
+                <span class="text-amber-500 font-bold">01</span>
+                <span><strong>Gem에서 '스킬(Skill)'로:</strong> 단순 역할 부여를 넘어 업무 절차와 검증 규칙을 저장하는 원리 이해</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="text-amber-500 font-bold">02</span>
+                <span><strong>직군별 맞춤 스킬 실습:</strong> 공공기관(회의록 검수), 사회적기업(심사위원·홍보), 취준생(자소서·면접관) 중 선택 제작</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-sky-100 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-11 h-11 rounded-2xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center text-2xl">🚀</span>
+              <div>
+                <span class="text-xs font-bold text-sky-600 dark:text-sky-400">2차시 (약 110분)</span>
+                <h3 class="font-display text-xl text-slate-800 dark:text-white">바이브코딩 & 무료 웹앱 URL 배포</h3>
+              </div>
+            </div>
+            <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+              <li class="flex items-start gap-2.5">
+                <span class="text-sky-500 font-bold">03</span>
+                <span><strong>Gemini Canvas 체험:</strong> 말로 설명해서 즉시 동작하는 실무 도구 만들기 & 초보자 디버깅</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="text-sky-500 font-bold">04</span>
+                <span><strong>구글 시트 + Apps Script 배포:</strong> 데이터가 시트에 자동 저장되는 나만의 웹앱을 URL로 배포</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="text-sky-500 font-bold">05</span>
+                <span><strong>직군별 커스터마이징 & 보안:</strong> 내 업무·취업에 맞게 수정하고 안전하게 활용하기</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 실습 전 30초 체크리스트 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-emerald-100 dark:border-slate-700 shadow-sm">
+          <h3 class="font-display text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+            <span>✅</span> 실습 시작 전 30초 준비 체크리스트
+          </h3>
+          <div class="grid sm:grid-cols-3 gap-4">
+            <label class="flex items-start gap-3 p-4 rounded-2xl bg-emerald-50/70 dark:bg-slate-800/70 cursor-pointer">
+              <input type="checkbox" class="mt-1 w-4 h-4 accent-emerald-500 rounded" />
+              <div class="text-sm">
+                <strong class="block text-slate-800 dark:text-white">개인 구글 계정(Gmail) 로그인</strong>
+                <span class="text-xs text-slate-500 dark:text-slate-400">기관 계정은 웹앱 외부 배포가 차단될 수 있어요!</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 p-4 rounded-2xl bg-amber-50/70 dark:bg-slate-800/70 cursor-pointer">
+              <input type="checkbox" class="mt-1 w-4 h-4 accent-amber-500 rounded" />
+              <div class="text-sm">
+                <strong class="block text-slate-800 dark:text-white">Gemini 사이트 접속 확인</strong>
+                <span class="text-xs text-slate-500 dark:text-slate-400">gemini.google.com 이 잘 열리는지 확인해요.</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 p-4 rounded-2xl bg-sky-50/70 dark:bg-slate-800/70 cursor-pointer">
+              <input type="checkbox" class="mt-1 w-4 h-4 accent-sky-500 rounded" />
+              <div class="text-sm">
+                <strong class="block text-slate-800 dark:text-white">스마트폰 준비 (선택)</strong>
+                <span class="text-xs text-slate-500 dark:text-slate-400">내가 배포한 웹앱을 휴대폰으로 열어볼 거예요!</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // View 1 (1차시): Gem에서 '스킬(Skill)'로 이해하기
+    // -------------------------------------------------------------------------
+    function renderSkillConceptView() {
+      return `
+        <div class="mb-6">
+          <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 text-xs font-bold mb-2">
+            🌟 1차시 · AI 에이전트(스킬) 제작
+          </span>
+          <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+            🧩 Gem에서 '스킬(Skill)'로: 일하는 AI 만들기
+          </h2>
+          <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
+            매번 길게 설명하지 않아도, 내가 정한 업무 규칙과 양식대로 척척 일하는 나만의 AI 직원을 채용해 봅시다.
+          </p>
+        </div>
+
+        <!-- 비교 카드: 기존 Gem vs 진화한 스킬(Skill) -->
+        <div class="grid md:grid-cols-2 gap-5 mb-6">
+          <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-2xl">💎</span>
+              <h3 class="font-display text-lg text-slate-700 dark:text-slate-200">기존의 Gem (단순 역할극)</h3>
+            </div>
+            <ul class="space-y-2.5 text-sm text-slate-600 dark:text-slate-400">
+              <li>• "너는 친절한 마케터야" 수준의 페르소나 부여</li>
+              <li>• 대화창을 새로 열 때마다 업무 맥락을 다시 설명해야 함</li>
+              <li>• 결과물 형식이 들쭉날쭉하거나 없는 사실을 지어내기도 함</li>
+            </ul>
+          </div>
+
+          <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 rounded-3xl p-6 border-2 border-amber-300 dark:border-amber-700 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-2xl">⚡</span>
+              <h3 class="font-display text-lg text-amber-800 dark:text-amber-300">진화한 스킬(Skill) 기반 에이전트</h3>
+            </div>
+            <ul class="space-y-2.5 text-sm text-slate-700 dark:text-slate-200 font-medium">
+              <li>• <strong>업무 절차(Step) + 검증 규칙 + 출력 양식</strong>을 하나의 기술(스킬)로 패키징</li>
+              <li>• 자료만 툭 던져주면 정해진 순서대로 분석·검수·초안 작성까지 완료</li>
+              <li>• 모르는 정보는 <strong>[확인 필요]</strong>로 표시하도록 안전장치 내장</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 좋은 스킬 설계의 4대 공식 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-amber-100 dark:border-slate-700 shadow-sm mb-6">
+          <h3 class="font-display text-xl text-slate-800 dark:text-white mb-4">📐 초보자도 실패 없는 '좋은 스킬' 설계 4대 공식</h3>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50">
+              <div class="text-2xl mb-2">🎭</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">1. 역할과 목표</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">AI가 어떤 전문가인지, 최종적으로 무엇을 완성해야 하는지 한 줄로 정의합니다.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50">
+              <div class="text-2xl mb-2">📋</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">2. 작업 절차</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">1단계(핵심 추출) → 2단계(문서 구조화)처럼 일하는 순서를 번호로 적어줍니다.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50">
+              <div class="text-2xl mb-2">🛡️</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">3. 환각 방지 규칙</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">원문에 없는 날짜·예산·경력은 지어내지 말고 <code class="px-1 bg-white dark:bg-slate-800 rounded">[확인 필요]</code>로 표시하게 합니다.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/50">
+              <div class="text-2xl mb-2">✨</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">4. 고정 출력 양식</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">표(Table), 체크리스트, 5줄 요약 등 바로 복사해 쓸 수 있는 결과 형태를 못 박아 둡니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end">
+          <button onclick="selectCategory('skill-practice')" class="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 text-white font-bold text-sm shadow-md transition">
+            다음: 직군별 맞춤 스킬 직접 만들기 👉
+          </button>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // View 2 (1차시): 직군별 맞춤 스킬 제작 실습
+    // -------------------------------------------------------------------------
+    function renderSkillPracticeView() {
+      const t = TRACK_DATA[state.selectedTrack];
+      return `
+        <div class="mb-6">
+          <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200 text-xs font-bold mb-2">
+            🌟 1차시 · 실전 에이전트 제작
+          </span>
+          <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+            🤖 직군별 맞춤 AI 스킬(Skill) 만들기 실습
+          </h2>
+          <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
+            아래에서 본인에게 해당하는 직군 탭을 선택하고, 순서대로 복사·붙여넣기만 하면 나만의 AI 에이전트가 완성됩니다!
+          </p>
+        </div>
+
+        <!-- 따라하기 4단계 요약 -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          <div class="bg-white dark:bg-nightCard p-4 rounded-2xl border border-amber-100 dark:border-slate-700">
+            <span class="text-xs font-bold text-amber-600">STEP 1</span>
+            <p class="font-bold text-sm mt-1">Gemini 접속 & 새 스킬(Gem) 열기</p>
+          </div>
+          <div class="bg-white dark:bg-nightCard p-4 rounded-2xl border border-amber-100 dark:border-slate-700">
+            <span class="text-xs font-bold text-amber-600">STEP 2</span>
+            <p class="font-bold text-sm mt-1">아래 '스킬 지시사항' 복사해 저장</p>
+          </div>
+          <div class="bg-white dark:bg-nightCard p-4 rounded-2xl border border-amber-100 dark:border-slate-700">
+            <span class="text-xs font-bold text-amber-600">STEP 3</span>
+            <p class="font-bold text-sm mt-1">'테스트용 샘플 자료' 입력해 실행</p>
+          </div>
+          <div class="bg-white dark:bg-nightCard p-4 rounded-2xl border border-amber-100 dark:border-slate-700">
+            <span class="text-xs font-bold text-amber-600">STEP 4</span>
+            <p class="font-bold text-sm mt-1">아쉬운 부분 지시사항 수정·고도화</p>
+          </div>
+        </div>
+
+        <!-- 직군 선택 탭 -->
+        <div class="flex flex-wrap gap-2 mb-5">
+          ${['public', 'social', 'job'].map(key => {
+            const item = TRACK_DATA[key];
+            const active = state.selectedTrack === key;
+            return `
+              <button onclick="setTrack('${key}')"
+                class="px-5 py-2.5 rounded-2xl text-sm font-bold transition ${
+                  active
+                    ? 'bg-slate-900 text-white dark:bg-amber-400 dark:text-slate-900 shadow-md scale-[1.02]'
+                    : 'bg-white dark:bg-nightCard text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-amber-50 dark:hover:bg-slate-800'
+                }">
+                ${item.badge}
+              </button>
+            `;
+          }).join('')}
+        </div>
+
+        <!-- 선택된 직군 실습 카드 -->
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- 왼쪽: 스킬 지시사항 -->
+          <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-amber-200 dark:border-slate-700 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <span class="text-xs font-bold text-amber-600 dark:text-amber-400">스킬 설정창에 붙여넣기</span>
+                <h3 class="font-display text-lg text-slate-800 dark:text-white">✨ ${escapeHtml(t.skillName)}</h3>
+              </div>
+              <button onclick="copyById('skillInstBox', '스킬 지시사항이 복사되었어요!')"
+                class="shrink-0 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow transition">
+                📋 원클릭 복사
+              </button>
+            </div>
+            <pre id="skillInstBox" class="flex-1 whitespace-pre-wrap font-sans text-sm leading-relaxed bg-amber-50/70 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 p-4 rounded-2xl border border-amber-100 dark:border-slate-700">${escapeHtml(t.skillInstruction)}</pre>
+          </div>
+
+          <!-- 오른쪽: 테스트용 샘플 데이터 -->
+          <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-sky-200 dark:border-slate-700 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div>
+                <span class="text-xs font-bold text-sky-600 dark:text-sky-400">저장 후 대화창에 입력해 테스트!</span>
+                <h3 class="font-display text-lg text-slate-800 dark:text-white">🧪 연습용 샘플 입력 데이터</h3>
+              </div>
+              <button onclick="copyById('sampleInputBox', '샘플 데이터가 복사되었어요!')"
+                class="shrink-0 px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow transition">
+                📋 원클릭 복사
+              </button>
+            </div>
+            <pre id="sampleInputBox" class="flex-1 whitespace-pre-wrap font-sans text-sm leading-relaxed bg-sky-50/70 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 p-4 rounded-2xl border border-sky-100 dark:border-slate-700">${escapeHtml(t.sampleInput)}</pre>
+
+            <div class="mt-4 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 text-xs text-emerald-800 dark:text-emerald-200 leading-relaxed">
+              💡 <strong>관전 포인트:</strong> 샘플에 없는 정보(예: 확정 장소, 정확한 수치)를 AI가 멋대로 지어내지 않고 <strong>[확인 필요]</strong> 등으로 정확히 표시했는지 꼭 확인해 보세요!
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // View 3 (2차시): 바이브코딩 첫걸음 (Gemini Canvas)
+    // -------------------------------------------------------------------------
+    function renderVibeCanvasView() {
+      const canvasPrompt = `너는 친절한 웹 개발자야. 스마트폰에서도 예쁘게 보이는 '모임·행사비 스마트 정산기' 웹 도구를 단일 HTML 파일로 만들어 줘.
+
+[필수 기능]
+1. 총 결제 금액(안주/식사비와 주류/음료비를 따로 입력)과 참석자 이름을 추가할 수 있게 해줘.
+2. 참석자별로 '전체 참석 / 조기 귀가(50% 부담) / 음료 미섭취' 옵션을 버튼으로 고를 수 있게 해줘.
+3. '정산 계산하기' 버튼을 누르면 1인당 부담 금액을 10원 단위로 깔끔하게 계산해 줘.
+4. 맨 아래에 '카카오톡 공유용 정산 문구 복사하기' 버튼을 넣어줘.
+5. 디자인은 귀엽고 깔끔한 파스텔 톤으로 만들어 줘.`;
+
+      return `
+        <div class="mb-6">
+          <span class="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200 text-xs font-bold mb-2">
+            🚀 2차시 · 바이브코딩 & 웹앱 배포
+          </span>
+          <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+            🎨 바이브코딩 첫걸음: Gemini Canvas로 3분 만에 도구 만들기
+          </h2>
+          <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
+            코딩 문법을 외울 필요 없어요! 기획자처럼 <strong>"이런 도구를 만들어 줘"</strong>라고 말하고, 눈으로 보면서 대화로 고치는 것이 바이브코딩입니다.
+          </p>
+        </div>
+
+        <!-- 바이브코딩 3단계 사이클 -->
+        <div class="grid sm:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white dark:bg-nightCard p-5 rounded-3xl border border-sky-100 dark:border-slate-700 shadow-sm text-center">
+            <div class="text-3xl mb-2">🗣️</div>
+            <h3 class="font-display text-lg text-slate-800 dark:text-white">1. 말로 기획하기</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Gemini 입력창 하단의 <strong>[Canvas]</strong> 버튼을 켜고 원하는 기능을 적습니다.</p>
+          </div>
+          <div class="bg-white dark:bg-nightCard p-5 rounded-3xl border border-sky-100 dark:border-slate-700 shadow-sm text-center">
+            <div class="text-3xl mb-2">👀</div>
+            <h3 class="font-display text-lg text-slate-800 dark:text-white">2. 바로 눌러보기</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">오른쪽 <strong>[미리보기]</strong> 화면에서 버튼을 직접 눌러보며 작동 여부를 확인합니다.</p>
+          </div>
+          <div class="bg-white dark:bg-nightCard p-5 rounded-3xl border border-sky-100 dark:border-slate-700 shadow-sm text-center">
+            <div class="text-3xl mb-2">🔧</div>
+            <h3 class="font-display text-lg text-slate-800 dark:text-white">3. 대화로 다듬기</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">"버튼을 더 크게 해줘", "초기화 버튼 추가해줘"처럼 편하게 수정을 요청합니다.</p>
+          </div>
+        </div>
+
+        <!-- 워밍업 프롬프트 카드 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-sky-200 dark:border-slate-700 shadow-sm mb-6">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <span class="text-xs font-bold text-sky-600 dark:text-sky-400">실습 1 · Gemini Canvas에 그대로 붙여넣어 보세요!</span>
+              <h3 class="font-display text-xl text-slate-800 dark:text-white">🧾 스마트 모임·행사비 정산기 프롬프트</h3>
+            </div>
+            <button onclick="copyById('canvasPromptBox', 'Canvas 실습 프롬프트가 복사되었어요!')"
+              class="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow transition">
+              📋 프롬프트 원클릭 복사
+            </button>
+          </div>
+          <pre id="canvasPromptBox" class="whitespace-pre-wrap font-sans text-sm leading-relaxed bg-sky-50/70 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 p-4 rounded-2xl border border-sky-100 dark:border-slate-700">${escapeHtml(canvasPrompt)}</pre>
+        </div>
+
+        <!-- 초보자용 디버깅 마법 문장 3종 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-amber-100 dark:border-slate-700 shadow-sm">
+          <h3 class="font-display text-lg text-slate-800 dark:text-white mb-3">🪄 화면이 이상하거나 버튼이 안 눌릴 때 쓰는 '디버깅 마법 문장'</h3>
+          <div class="grid md:grid-cols-3 gap-3">
+            ${[
+              { title: '버튼이 먹통일 때', text: '방금 만든 화면에서 [계산하기] 버튼을 눌러도 아무 반응이 없어. 원인을 찾아서 버튼이 정상 작동하도록 전체 코드를 다시 고쳐줘.' },
+              { title: '모바일 화면이 깨질 때', text: '스마트폰 화면에서는 표가 오른쪽으로 잘려 보여. 모바일 화면에서도 가로 스크롤 없이 예쁘게 보이도록 반응형으로 수정해 줘.' },
+              { title: '기능을 더 추가하고 싶을 때', text: '지금 디자인은 유지하면서, 맨 아래에 입력 내용을 모두 지우는 [초기화] 버튼과 결과를 엑셀(CSV)로 내려받는 버튼만 추가해 줘.' }
+            ].map((item, idx) => `
+              <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-slate-800/60 border border-amber-100 dark:border-slate-700 flex flex-col justify-between gap-3">
+                <div>
+                  <span class="text-xs font-bold text-amber-600 dark:text-amber-400">상황 ${idx + 1} · ${item.title}</span>
+                  <p class="text-xs text-slate-700 dark:text-slate-300 mt-1.5 leading-relaxed">"${item.text}"</p>
+                </div>
+                <button onclick="copyText('${item.text}', '디버깅 문장이 복사되었어요!')"
+                  class="w-full py-2 rounded-xl bg-white dark:bg-slate-700 hover:bg-amber-100 dark:hover:bg-slate-600 text-amber-700 dark:text-amber-300 text-xs font-bold border border-amber-200 dark:border-slate-600 transition">
+                  📋 문장 복사
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // View 4 (2차시): 구글 시트 + Apps Script 웹앱 배포 따라하기
+    // -------------------------------------------------------------------------
+    function renderWebappDeployView() {
+      const deployPrompt = `너는 구글 앱스 스크립트(Google Apps Script)와 웹 개발 전문가야. 구글 시트와 실시간으로 연동되는 '실시간 접수·관리 웹앱'을 만들고 싶어.
+1. Code.gs 파일과 index.html 파일 두 개로 나누어 완전한 전체 코드를 작성해 줘.
+2. 화면은 Tailwind CSS CDN을 써서 스마트폰에서도 보기 좋은 깔끔한 카드형으로 만들어 줘.
+3. 입력 항목은 [항목/제목, 분류/상태, 수량/점수, 담당자/메모] 4가지로 하고, 저장 버튼을 누르면 연결된 구글 시트 첫 번째 시트 맨 아래 행에 저장되게 해 줘.
+4. 하단에는 시트에 저장된 최근 내역 10건을 바로 불러와서 보여줘.`;
+
+      return `
+        <div class="mb-6">
+          <span class="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200 text-xs font-bold mb-2">
+            🚀 2차시 · 실전 무료 URL 배포
+          </span>
+          <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+            🌐 구글 시트 + Apps Script로 나만의 웹앱 배포하기
+          </h2>
+          <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
+            서버 비용 0원! 웹에서 입력하면 내 구글 시트에 실시간으로 쌓이고, 누구나 접속할 수 있는 <strong>진짜 웹앱 주소(URL)</strong>를 발급받아 봅시다.
+          </p>
+        </div>
+
+        <!-- 5단계 초밀착 따라하기 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-sky-100 dark:border-slate-700 shadow-sm mb-6">
+          <h3 class="font-display text-xl text-slate-800 dark:text-white mb-4">🪜 초보자도 100% 성공하는 5단계 배포 가이드</h3>
+          <div class="space-y-3">
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 flex gap-3.5 items-start">
+              <span class="w-7 h-7 rounded-full bg-sky-500 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">1</span>
+              <div class="text-sm">
+                <strong class="text-slate-800 dark:text-white">새 구글 시트 만들기 & Apps Script 열기</strong>
+                <p class="text-slate-600 dark:text-slate-300 text-xs mt-1">브라우저 주소창에 <code class="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-200 font-bold">sheets.new</code>를 입력해 새 시트를 만들고, 상단 메뉴 <strong>[확장 프로그램] → [Apps Script]</strong>를 클릭합니다.</p>
+              </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 flex gap-3.5 items-start">
+              <span class="w-7 h-7 rounded-full bg-sky-500 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">2</span>
+              <div class="text-sm">
+                <strong class="text-slate-800 dark:text-white">Code.gs 와 index.html 두 파일 만들기</strong>
+                <p class="text-slate-600 dark:text-slate-300 text-xs mt-1">기존 <code class="font-bold">Code.gs</code> 내용을 모두 지우고 아래 <strong>Code.gs 코드</strong>를 붙여넣습니다. 왼쪽 파일 목록의 <strong>[+] → [HTML]</strong>을 눌러 이름을 <code class="font-bold text-rose-500">index</code>(소문자 정확히!)로 만든 뒤 <strong>index.html 코드</strong>를 붙여넣고 저장(Ctrl+S)합니다.</p>
+              </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 flex gap-3.5 items-start">
+              <span class="w-7 h-7 rounded-full bg-sky-500 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">3</span>
+              <div class="text-sm">
+                <strong class="text-slate-800 dark:text-white">우측 상단 [배포] → [새 배포] 클릭</strong>
+                <p class="text-slate-600 dark:text-slate-300 text-xs mt-1">유형 선택(톱니바퀴)에서 <strong>[웹 앱]</strong>을 고르고, <strong>액세스 권한이 있는 사용자: [모든 사용자]</strong>로 변경한 뒤 [배포]를 누릅니다.</p>
+              </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex gap-3.5 items-start">
+              <span class="w-7 h-7 rounded-full bg-rose-500 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">4</span>
+              <div class="text-sm">
+                <strong class="text-rose-700 dark:text-rose-300">⚠️ 구글 보안 경고창 통과하기 (당황 금지!)</strong>
+                <p class="text-slate-700 dark:text-slate-300 text-xs mt-1">내가 만든 앱이라 뜨는 정상 화면입니다! <strong>[액세스 승인] → 본인 계정 클릭 → 왼쪽 아래 [고급] → [제목 없는 프로젝트(안전하지 않음)로 이동] → [허용]</strong> 순으로 클릭하세요.</p>
+              </div>
+            </div>
+            <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 flex gap-3.5 items-start">
+              <span class="w-7 h-7 rounded-full bg-emerald-500 text-white font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">5</span>
+              <div class="text-sm">
+                <strong class="text-emerald-700 dark:text-emerald-300">🎉 웹 앱 URL 확인 & 수정 후 재배포 꿀팁</strong>
+                <p class="text-slate-700 dark:text-slate-300 text-xs mt-1">생성된 <strong>웹 앱 URL</strong>을 클릭해 테스트해 보세요! 나중에 코드를 수정했다면 반드시 <strong>[배포] → [배포 관리] → [수정(연필 아이콘)] → 버전: [새 버전] → [배포]</strong>를 해야 화면이 바뀝니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 검증된 완성 코드 복사 박스 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-amber-200 dark:border-slate-700 shadow-sm mb-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <span class="text-xs font-bold text-amber-600 dark:text-amber-400">초보자 낙오 방지용 · 100% 작동 검증 코드</span>
+              <h3 class="font-display text-xl text-slate-800 dark:text-white">💻 그대로 붙여넣는 완성 코드 세트</h3>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="setCodeTab('codegs')"
+                class="px-4 py-2 rounded-xl text-xs font-bold transition ${state.codeTab === 'codegs' ? 'bg-slate-900 text-white dark:bg-amber-400 dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
+                1. Code.gs
+              </button>
+              <button onclick="setCodeTab('indexhtml')"
+                class="px-4 py-2 rounded-xl text-xs font-bold transition ${state.codeTab === 'indexhtml' ? 'bg-slate-900 text-white dark:bg-amber-400 dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
+                2. index.html
+              </button>
+              <button onclick="copyById('deployCodeBox', '${state.codeTab === 'codegs' ? 'Code.gs' : 'index.html'} 코드가 복사되었어요!')"
+                class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow transition">
+                📋 코드 복사
+              </button>
+            </div>
+          </div>
+          <pre id="deployCodeBox" class="max-h-96 overflow-y-auto font-mono text-xs leading-relaxed bg-slate-900 text-emerald-300 p-4 rounded-2xl">${escapeHtml(state.codeTab === 'codegs' ? SAMPLE_CODE_GS : SAMPLE_INDEX_HTML)}</pre>
+        </div>
+
+        <!-- 직접 Gemini로 만들어보는 프롬프트 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h3 class="font-display text-lg text-slate-800 dark:text-white">🤖 참고: Gemini에게 직접 시킬 때 쓰는 바이브코딩 프롬프트</h3>
+            <button onclick="copyById('deployPromptBox', '프롬프트가 복사되었어요!')"
+              class="px-3.5 py-2 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-xs font-bold hover:opacity-90">
+              📋 복사
+            </button>
+          </div>
+          <pre id="deployPromptBox" class="whitespace-pre-wrap font-sans text-sm bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 p-4 rounded-2xl">${escapeHtml(deployPrompt)}</pre>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // View 5 (2차시): 직군별 커스터마이징 & 보안 가이드
+    // -------------------------------------------------------------------------
+    function renderCustomSecurityView() {
+      const t = TRACK_DATA[state.selectedTrack];
+      return `
+        <div class="mb-6">
+          <span class="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200 text-xs font-bold mb-2">
+            🚀 2차시 · 나만의 도구 완성 & 실무 적용
+          </span>
+          <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+            🛡️ 직군별 웹앱 커스터마이징 & 안전 보안 가이드
+          </h2>
+          <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm sm:text-base">
+            방금 배포한 기본 웹앱을 내 업무와 취업 준비에 딱 맞게 변신시키고, 실무에서 안전하게 쓰는 원칙을 정리합니다.
+          </p>
+        </div>
+
+        <!-- 직군별 커스터마이징 프롬프트 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-indigo-100 dark:border-slate-700 shadow-sm mb-6">
+          <h3 class="font-display text-xl text-slate-800 dark:text-white mb-3">✨ 직군별 맞춤 변신 프롬프트</h3>
+          <div class="flex flex-wrap gap-2 mb-4">
+            ${['public', 'social', 'job'].map(key => {
+              const item = TRACK_DATA[key];
+              const active = state.selectedTrack === key;
+              return `
+                <button onclick="setTrack('${key}')"
+                  class="px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold transition ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50'
+                  }">
+                  ${item.badge}
+                </button>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="p-5 rounded-2xl bg-indigo-50/70 dark:bg-slate-800/80 border border-indigo-100 dark:border-slate-700">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <strong class="text-indigo-800 dark:text-indigo-300 text-base">🎯 추천 프로젝트: ${escapeHtml(t.webappIdea)}</strong>
+              <button onclick="copyById('customPromptBox', '커스터마이징 프롬프트가 복사되었어요!')"
+                class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow">
+                📋 프롬프트 복사
+              </button>
+            </div>
+            <pre id="customPromptBox" class="whitespace-pre-wrap font-sans text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${escapeHtml(t.customPrompt)}</pre>
+          </div>
+        </div>
+
+        <!-- 현업 도입 필수 보안 3원칙 -->
+        <div class="bg-white dark:bg-nightCard rounded-3xl p-6 border border-rose-100 dark:border-slate-700 shadow-sm">
+          <h3 class="font-display text-xl text-slate-800 dark:text-white mb-4">🔒 현업 적용 시 꼭 지켜야 할 AI 보안 3원칙</h3>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/50">
+              <div class="text-2xl mb-2">🚫</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">1. 개인정보·대외비 입력 금지</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">주민등록번호, 실명 연락처, 기관 비공개 문서는 AI 채팅창에 넣지 말고 반드시 가명·비식별 처리 후 활용하세요.</p>
+            </div>
+            <div class="p-5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50">
+              <div class="text-2xl mb-2">👁️</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">2. 최종 검토와 승인은 사람이</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">AI가 만든 초안과 계산 결과는 반드시 원문과 대조하고, 사람의 최종 확인을 거친 뒤 발송·제출합니다.</p>
+            </div>
+            <div class="p-5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50">
+              <div class="text-2xl mb-2">📱</div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm mb-1">3. QR코드로 현장 확산</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">배포한 웹앱 주소는 QR코드로 출력해 행사장·매장에 비치하거나, 이력서 포트폴리오 링크로 바로 활용해 보세요!</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // -------------------------------------------------------------------------
+    // View 6: 실시간 연동 - 실습데이터 (텍스트 복사 / 링크 바로가기+QR+확대)
+    // -------------------------------------------------------------------------
+    function renderPracticeDataView() {
+      const q = state.searchPractice.trim().toLowerCase();
+      const filtered = state.practiceData
+        .map((item, idx) => ({ ...item, idx }))
+        .filter(item => !q || item.title.toLowerCase().includes(q) || item.content.toLowerCase().includes(q));
+
+      return `
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200 text-xs font-bold mb-2">
+              📡 구글 시트 '실습데이터' 실시간 연동
+            </span>
+            <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+              📂 실습데이터 자료실
+            </h2>
+            <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm">
+              텍스트 자료는 <strong>원클릭 복사</strong>, 링크 자료는 <strong>바로가기 & QR코드(클릭 시 확대)</strong>로 바로 사용하세요!
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input type="text" value="${escapeHtml(state.searchPractice)}"
+              oninput="state.searchPractice=this.value; renderCurrentCategory();"
+              placeholder="자료 제목·내용 검색..."
+              class="flex-1 sm:w-60 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-nightCard text-sm focus:ring-2 focus:ring-emerald-400 outline-none" />
+            <button onclick="refreshAllSheets()" class="px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow shrink-0">
+              🔄 새로고침
+            </button>
+          </div>
+        </div>
+
+        ${state.sheetError.practice ? `
+          <div class="p-6 rounded-3xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-center">
+            <div class="text-3xl mb-2">😢</div>
+            <p class="font-bold text-rose-700 dark:text-rose-300">구글 시트 '실습데이터'를 불러오지 못했습니다.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">구글 시트가 '링크가 있는 모든 사용자 보기 가능'으로 공유되어 있는지 확인해 주세요.</p>
+          </div>
+        ` : filtered.length === 0 ? `
+          <div class="p-10 rounded-3xl bg-white dark:bg-nightCard border border-slate-200 dark:border-slate-700 text-center">
+            <div class="text-4xl mb-2">📭</div>
+            <p class="font-display text-lg text-slate-700 dark:text-slate-200">표시할 실습데이터가 아직 없습니다.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">강사가 구글 시트에 자료를 입력하면 '새로고침' 시 즉시 나타납니다.</p>
+          </div>
+        ` : `
+          <div class="grid md:grid-cols-2 gap-5">
+            ${filtered.map(item => {
+              if (item.isLink) {
+                const url = normalizeUrl(item.content);
+                return `
+                  <div class="bg-white dark:bg-nightCard rounded-3xl p-5 border border-emerald-100 dark:border-slate-700 shadow-sm flex flex-col justify-between gap-4">
+                    <div class="flex items-start justify-between gap-4">
+                      <div class="min-w-0 flex-1">
+                        <span class="inline-block px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300 text-[11px] font-bold mb-1.5">🔗 링크 자료</span>
+                        <h3 class="font-display text-lg text-slate-800 dark:text-white break-words">${escapeHtml(item.title || '실습 링크')}</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 break-all mt-1.5 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-xl">${escapeHtml(url)}</p>
+                      </div>
+                      <button onclick="openQrModal('${escapeHtml(item.title || '실습 링크').replace(/'/g, "\\'")}', '${escapeHtml(url).replace(/'/g, "\\'")}')"
+                        title="클릭하여 QR코드 확대"
+                        class="shrink-0 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs hover:scale-105 transition group">
+                        <div id="pqr-${item.idx}" class="qr-box w-[84px] h-[84px]"></div>
+                        <span class="block text-[10px] font-bold text-slate-500 group-hover:text-sky-600 mt-1">🔍 확대</span>
+                      </button>
+                    </div>
+                    <div class="flex gap-2">
+                      <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
+                        class="flex-1 text-center py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow transition">
+                        🚀 바로가기
+                      </a>
+                      <button onclick="openQrModal('${escapeHtml(item.title || '실습 링크').replace(/'/g, "\\'")}', '${escapeHtml(url).replace(/'/g, "\\'")}')"
+                        class="px-4 py-2.5 rounded-2xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/50 dark:hover:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs font-bold transition">
+                        📱 QR 확대
+                      </button>
+                    </div>
+                  </div>
+                `;
+              } else {
+                return `
+                  <div class="bg-white dark:bg-nightCard rounded-3xl p-5 border border-emerald-100 dark:border-slate-700 shadow-sm flex flex-col justify-between gap-3">
+                    <div>
+                      <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 text-[11px] font-bold">📝 텍스트 자료</span>
+                        <button onclick="copyById('ptext-${item.idx}', '실습데이터가 복사되었어요!')"
+                          class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow transition">
+                          📋 원클릭 복사
+                        </button>
+                      </div>
+                      <h3 class="font-display text-lg text-slate-800 dark:text-white mb-2">${escapeHtml(item.title || '실습 텍스트')}</h3>
+                      <pre id="ptext-${item.idx}" class="whitespace-pre-wrap font-sans text-xs sm:text-sm leading-relaxed bg-emerald-50/60 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 p-3.5 rounded-2xl border border-emerald-100 dark:border-slate-700 max-h-56 overflow-y-auto">${escapeHtml(item.content)}</pre>
+                    </div>
+                  </div>
+                `;
+              }
+            }).join('')}
+          </div>
+        `}
+      `;
+    }
+
+    function renderPracticeQRs() {
+      if (typeof QRCode === 'undefined') return;
+      state.practiceData.forEach((item, idx) => {
+        if (!item.isLink) return;
+        const el = document.getElementById(`pqr-${idx}`);
+        if (!el) return;
+        el.innerHTML = '';
+        new QRCode(el, {
+          text: normalizeUrl(item.content),
+          width: 84,
+          height: 84,
+          colorDark: '#1e293b',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.L
+        });
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // View 7: 실시간 연동 - 참고사이트 (바로가기 + QR + 확대)
+    // -------------------------------------------------------------------------
+    function renderRefSitesView() {
+      const q = state.searchRef.trim().toLowerCase();
+      const filtered = state.refSites
+        .map((item, idx) => ({ ...item, idx }))
+        .filter(item => !q || item.title.toLowerCase().includes(q) || item.url.toLowerCase().includes(q));
+
+      return `
+        <div class="flex flex-wrap items-end justify-between gap-4 mb-6">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200 text-xs font-bold mb-2">
+              📡 구글 시트 '참고사이트' 실시간 연동
+            </span>
+            <h2 class="font-display text-2xl sm:text-3xl text-slate-800 dark:text-white">
+              🔗 강사 추천 참고사이트
+            </h2>
+            <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm">
+              실습에 유용한 사이트를 모아두었어요. <strong>바로가기</strong>를 누르거나 <strong>QR코드를 확대</strong>해 스마트폰으로 스캔하세요!
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <input type="text" value="${escapeHtml(state.searchRef)}"
+              oninput="state.searchRef=this.value; renderCurrentCategory();"
+              placeholder="사이트 이름·주소 검색..."
+              class="flex-1 sm:w-60 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-nightCard text-sm focus:ring-2 focus:ring-sky-400 outline-none" />
+            <button onclick="refreshAllSheets()" class="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow shrink-0">
+              🔄 새로고침
+            </button>
+          </div>
+        </div>
+
+        ${state.sheetError.ref ? `
+          <div class="p-6 rounded-3xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-center">
+            <div class="text-3xl mb-2">😢</div>
+            <p class="font-bold text-rose-700 dark:text-rose-300">구글 시트 '참고사이트'를 불러오지 못했습니다.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">구글 시트 공유 권한과 시트명('참고사이트')을 확인해 주세요.</p>
+          </div>
+        ` : filtered.length === 0 ? `
+          <div class="p-10 rounded-3xl bg-white dark:bg-nightCard border border-slate-200 dark:border-slate-700 text-center">
+            <div class="text-4xl mb-2">🌐</div>
+            <p class="font-display text-lg text-slate-700 dark:text-slate-200">등록된 참고사이트가 아직 없습니다.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">구글 시트 '참고사이트' 탭에 링크를 추가하면 실시간으로 표시됩니다.</p>
+          </div>
+        ` : `
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            ${filtered.map(item => {
+              const url = normalizeUrl(item.url);
+              return `
+                <div class="bg-white dark:bg-nightCard rounded-3xl p-5 border border-sky-100 dark:border-slate-700 shadow-sm flex flex-col justify-between gap-4 hover:shadow-md transition">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                      <span class="inline-block px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300 text-[11px] font-bold mb-1.5">🌐 참고사이트</span>
+                      <h3 class="font-display text-lg text-slate-800 dark:text-white break-words">${escapeHtml(item.title || '참고 링크')}</h3>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 break-all mt-1.5 line-clamp-2">${escapeHtml(url)}</p>
+                    </div>
+                    <button onclick="openQrModal('${escapeHtml(item.title || '참고사이트').replace(/'/g, "\\'")}', '${escapeHtml(url).replace(/'/g, "\\'")}')"
+                      title="클릭하여 QR코드 확대"
+                      class="shrink-0 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs hover:scale-105 transition group">
+                      <div id="rqr-${item.idx}" class="qr-box w-[78px] h-[78px]"></div>
+                      <span class="block text-[10px] font-bold text-slate-500 group-hover:text-sky-600 mt-1">🔍 확대</span>
+                    </button>
+                  </div>
+                  <div class="flex gap-2">
+                    <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
+                      class="flex-1 text-center py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold shadow transition">
+                      🚀 바로가기
+                    </a>
+                    <button onclick="openQrModal('${escapeHtml(item.title || '참고사이트').replace(/'/g, "\\'")}', '${escapeHtml(url).replace(/'/g, "\\'")}')"
+                      class="px-3.5 py-2.5 rounded-2xl bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/50 dark:hover:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs font-bold transition">
+                      📱 QR
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `}
+      `;
+    }
+
+    function renderRefQRs() {
+      if (typeof QRCode === 'undefined') return;
+      state.refSites.forEach((item, idx) => {
+        const el = document.getElementById(`rqr-${idx}`);
+        if (!el) return;
+        el.innerHTML = '';
+        new QRCode(el, {
+          text: normalizeUrl(item.url),
+          width: 78,
+          height: 78,
+          colorDark: '#1e293b',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.L
+        });
+      });
+    }
+
+    // =========================================================================
+    // 7. 초기화 실행
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', async () => {
+      initTheme();
+      selectCategory('intro');
+      await refreshAllSheets(false);
+    });
+  </script>
+</body>
+</html>
